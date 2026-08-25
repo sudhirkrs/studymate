@@ -2,7 +2,7 @@
 
 An all-in-one study companion for the **ISC (CISCE) syllabus, Classes XI and XII** — English, Mathematics, Physics, Chemistry and Biology.
 
-**Live site:** _(enable GitHub Pages — see below — and the URL appears here)_
+**Live site: https://sudhirkrs.github.io/studymate/**
 
 Class 11 and 12 under the CISCE board follow the **ISC** syllabus. (ICSE is Classes 9–10.)
 
