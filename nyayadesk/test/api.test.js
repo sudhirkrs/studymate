@@ -150,6 +150,42 @@ test('quota and trial expiry block AI calls', async () => {
   assert.match(r2.body.error, /trial has ended/);
 });
 
+test('Starter plan: standard model, quick research and drafting only', async () => {
+  const c = await signup('starter@firm.in', 'Starter Chambers');
+  const firm = q.get("SELECT f.* FROM firms f JOIN users u ON u.firm_id = f.id WHERE u.email = 'starter@firm.in'");
+  q.run("UPDATE firms SET plan = 'starter', status = 'active', trial_ends_at = NULL WHERE id = ?", firm.id);
+  const me = await c.get('/api/auth/me');
+  assert.equal(me.body.firm.planName, 'Starter');
+  assert.equal(me.body.usage.quota, 45);
+  assert.ok(!me.body.firm.features.includes('review'));
+
+  const quick = sseEvents(await (await c.post('/api/research', { question: 'Limitation for a s.138 complaint?', mode: 'quick' }, true)).text());
+  assert.ok(quick.some((e) => e.type === 'done'));
+  assert.equal(q.get('SELECT model FROM usage_events WHERE firm_id = ?', firm.id).model, 'claude-sonnet-5');
+
+  const memo = await c.post('/api/research', { question: 'Full memo on s.138 limitation please', mode: 'memo' });
+  assert.equal(memo.status, 403);
+  assert.match(memo.body.error, /Solo plan/);
+
+  const fd = new FormData();
+  fd.append('file', new Blob(['An agreement.'], { type: 'text/plain' }), 'a.txt');
+  const up = await c.post('/api/documents', fd);
+  assert.equal((await c.post(`/api/documents/${up.body.id}/review`, { mode: 'contract' })).status, 403);
+
+  const d = sseEvents(await (await c.post('/api/drafts/generate', { templateId: 'legal-notice', inputs: {} }, true)).text());
+  assert.ok(d.some((e) => e.type === 'done'));
+
+  const plans = (await c.get('/api/billing')).body.plans;
+  assert.equal(plans.find((p) => p.id === 'starter').pricePerSeat, 999);
+});
+
+test('premium plans record the premium model', async () => {
+  const c = await signup('premium@firm.in');
+  sseEvents(await (await c.post('/api/research', { question: 'Which model answers this?', mode: 'quick' }, true)).text());
+  const row = q.get("SELECT e.model FROM usage_events e JOIN users u ON u.id = e.user_id WHERE u.email = 'premium@firm.in'");
+  assert.equal(row.model, 'claude-opus-5');
+});
+
 test('drafting: templates, generate, edit, docx export', async () => {
   const c = await signup('draft@firm.in');
   const t = await c.get('/api/drafts/templates');

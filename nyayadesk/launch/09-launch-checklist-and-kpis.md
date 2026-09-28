@@ -5,7 +5,7 @@
 ### Product and quality
 - [ ] `npm test` green in CI.
 - [ ] Live mode verified: `ANTHROPIC_API_KEY` set; `/api/health` shows `"demoMode": false`.
-- [ ] 100-question quality benchmark passed (≥ 85% usable; zero unflagged fabricated citations). Keep the question set and re-run it before every prompt or model change.
+- [ ] 100-question quality benchmark passed (≥ 85% usable; zero unflagged fabricated citations) using `npm run compare` and blind grading by two advocates — for both the premium model and the Starter model. Keep the question set (`eval/questions.json`) and re-run it before every prompt or model change.
 - [ ] Each of the 37 drafting templates generated once and reviewed by a practising advocate in that area (labour templates by a labour-law practitioner).
 - [ ] Criminal-law converter, labour-law mapping and limitation table spot-checked against the bare acts, the Labour Codes and notified rules by advocates in each area (`server/data/criminal-law-map.js`, `server/data/labour.js`, `server/data/limitation.js`).
 - [ ] Labour Codes commencement status and central/State rules re-confirmed on the launch date.

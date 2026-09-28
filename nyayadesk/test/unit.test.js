@@ -114,3 +114,17 @@ test('templates are well-formed and unique', () => {
     assert.ok(labour.includes(id), `missing labour template ${id}`);
   }
 });
+
+test('model profiles and cost estimates', async () => {
+  const { modelProfile, estimateCost } = await import('../server/data/models.js');
+  assert.equal(modelProfile('claude-opus-5').thinking.type, 'adaptive');
+  assert.equal(modelProfile('claude-opus-5').supportsFallback, true);
+  assert.equal(modelProfile('claude-sonnet-5').supportsFallback, false);
+  const h = modelProfile('claude-haiku-4-5');
+  assert.equal(h.thinking.type, 'enabled');
+  assert.equal(h.supportsEffort, false);
+  assert.equal(h.webSearchType, 'web_search_20250305');
+  const c = estimateCost('claude-sonnet-5', { input_tokens: 1e6, output_tokens: 1e5, server_tool_use: { web_search_requests: 10 } });
+  assert.ok(Math.abs(c.usd - (2 + 1 + 0.1)) < 1e-9);
+  assert.equal(estimateCost('unknown-model', {}), null);
+});

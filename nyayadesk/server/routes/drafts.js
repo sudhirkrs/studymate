@@ -3,7 +3,7 @@ import { q, id, audit } from '../db.js';
 import { runStream } from '../ai/client.js';
 import { DRAFTING, REDRAFT } from '../ai/prompts.js';
 import { CATEGORIES, TEMPLATES, templateById } from '../data/templates.js';
-import { ACTION_COST, PLANS } from '../data/plans.js';
+import { ACTION_COST, PLANS, modelFor } from '../data/plans.js';
 import { checkAccess, recordUsage } from '../lib/usage.js';
 import { sse, str, wrap } from '../lib/http.js';
 import { draftToDocx } from '../lib/docx-export.js';
@@ -26,7 +26,7 @@ function resolveTemplate(firmId, templateId) {
   return { id: ft.id, name: ft.name, instructions: ft.instructions, sample: ft.sample, fields: [{ key: 'facts', label: 'Facts and instructions', long: true }] };
 }
 
-function buildBrief(template, inputs, extra, ctx, user) {
+export function buildBrief(template, inputs, extra, ctx, user) {
   const lines = template.fields.map((f) => `${f.label}: ${str(inputs?.[f.key], 8000) || '[NOT PROVIDED]'}`);
   let brief = `${ctx}Document to draft: ${template.name}\n\nForum and format instructions:\n${template.instructions}\n\nFacts supplied by the advocate:\n${lines.join('\n')}`;
   if (extra) brief += `\n\nAdditional instructions from the advocate:\n${extra}`;
@@ -49,6 +49,7 @@ draftsRouter.post('/generate', wrap(async (req, res) => {
   try {
     const result = await runStream({
       kind: 'draft',
+      model: modelFor(req.firm),
       system: DRAFTING,
       messages: [{ role: 'user', content: brief }],
       effort: 'high',
@@ -60,7 +61,7 @@ draftsRouter.post('/generate', wrap(async (req, res) => {
     const title = str(req.body.title, 200) || `${template.name}${matter ? ` — ${matter.title}` : ''}`;
     q.run(`INSERT INTO drafts (id, firm_id, user_id, matter_id, template_id, title, inputs_json, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       did, req.user.firmId, req.user.id, matter?.id || null, template.id, title, JSON.stringify(req.body.inputs || {}), result.text);
-    recordUsage(req.user.firmId, req.user.id, 'draft', ACTION_COST.draft, result.usage);
+    recordUsage(req.user.firmId, req.user.id, 'draft', ACTION_COST.draft, result.usage, result.model);
     audit(req.user.firmId, req.user.id, 'draft.generated', did, req.ip);
     stream.send({ type: 'done', id: did, title });
   } catch (err) {
@@ -89,11 +90,11 @@ draftsRouter.post('/:id/redraft', wrap(async (req, res) => {
   try {
     const content = `<current_draft>\n${body}\n</current_draft>\n\n${selection ? `The advocate has selected this passage to change:\n<selection>\n${selection}\n</selection>\n\n` : ''}Instruction: ${instruction}`;
     const result = await runStream({
-      kind: 'redraft', system: REDRAFT, messages: [{ role: 'user', content }], effort: 'high', maxTokens: 64000,
+      kind: 'redraft', model: modelFor(req.firm), system: REDRAFT, messages: [{ role: 'user', content }], effort: 'high', maxTokens: 64000,
       signal: abort.signal, onEvent: (e) => e.type === 'text' && stream.send(e),
     });
     q.run("UPDATE drafts SET body = ?, version = version + 1, updated_at = datetime('now') WHERE id = ?", result.text, d.id);
-    recordUsage(req.user.firmId, req.user.id, 'redraft', ACTION_COST.redraft, result.usage);
+    recordUsage(req.user.firmId, req.user.id, 'redraft', ACTION_COST.redraft, result.usage, result.model);
     audit(req.user.firmId, req.user.id, 'draft.redrafted', d.id, req.ip);
     stream.send({ type: 'done', id: d.id });
   } catch (err) {

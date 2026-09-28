@@ -17,7 +17,10 @@ export const config = {
 
   // AI
   anthropicKey: env.ANTHROPIC_API_KEY || '',
+  // Premium tier: research memos, reviews and all paid plans above Starter.
   model: env.NYAYA_MODEL || 'claude-opus-5',
+  // Standard tier: the lower-priced Starter plan.
+  modelStandard: env.NYAYA_MODEL_STANDARD || 'claude-sonnet-5',
   // Server-side refusal fallback (routes a declined request to Anthropic's
   // recommended substitute model). Set NYAYA_FALLBACKS=off to disable.
   fallbacks: (env.NYAYA_FALLBACKS || 'default') !== 'off',
@@ -39,6 +42,7 @@ export const config = {
   razorpayKeySecret: env.RAZORPAY_KEY_SECRET || '',
   razorpayWebhookSecret: env.RAZORPAY_WEBHOOK_SECRET || '',
   razorpayPlanIds: {
+    starter: env.RAZORPAY_PLAN_STARTER || '',
     solo: env.RAZORPAY_PLAN_SOLO || '',
     chambers: env.RAZORPAY_PLAN_CHAMBERS || '',
     firm: env.RAZORPAY_PLAN_FIRM || '',

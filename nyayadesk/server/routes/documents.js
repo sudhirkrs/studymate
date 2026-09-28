@@ -6,7 +6,7 @@ import { q, id, audit } from '../db.js';
 import { config } from '../config.js';
 import { runStream } from '../ai/client.js';
 import { REVIEW } from '../ai/prompts.js';
-import { ACTION_COST } from '../data/plans.js';
+import { ACTION_COST, UPGRADE_MESSAGE, modelFor, planAllows } from '../data/plans.js';
 import { checkAccess, recordUsage } from '../lib/usage.js';
 import { sse, str, wrap } from '../lib/http.js';
 import { extractText, isPdfBuffer, kindFor } from '../lib/extract.js';
@@ -58,6 +58,7 @@ documentsRouter.delete('/:id', (req, res) => {
 });
 
 documentsRouter.post('/:id/review', wrap(async (req, res) => {
+  if (!planAllows(req.firm, 'review')) return res.status(403).json({ error: UPGRADE_MESSAGE.review });
   const d = q.get('SELECT * FROM documents WHERE id = ? AND firm_id = ?', req.params.id, req.user.firmId);
   if (!d) return res.status(404).json({ error: 'Document not found.' });
   const mode = Object.hasOwn(REVIEW, req.body.mode) ? req.body.mode : 'custom';
@@ -82,6 +83,7 @@ documentsRouter.post('/:id/review', wrap(async (req, res) => {
   try {
     const result = await runStream({
       kind: 'review',
+      model: modelFor(req.firm),
       system: REVIEW[mode],
       messages: [{ role: 'user', content: [docBlock, { type: 'text', text: ask }] }],
       effort: 'high',
@@ -92,7 +94,7 @@ documentsRouter.post('/:id/review', wrap(async (req, res) => {
     const rid = id('rev');
     q.run('INSERT INTO reviews (id, firm_id, user_id, document_id, mode, instructions, result) VALUES (?, ?, ?, ?, ?, ?, ?)',
       rid, req.user.firmId, req.user.id, d.id, mode, instructions || null, result.text);
-    recordUsage(req.user.firmId, req.user.id, `review_${mode}`, ACTION_COST.review, result.usage);
+    recordUsage(req.user.firmId, req.user.id, `review_${mode}`, ACTION_COST.review, result.usage, result.model);
     audit(req.user.firmId, req.user.id, 'document.reviewed', d.id, req.ip);
     stream.send({ type: 'done', id: rid });
   } catch (err) {

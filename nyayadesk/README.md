@@ -14,7 +14,7 @@
 | **Legal tools** (free) | IPC↔BNS, CrPC↔BNSS, Evidence Act↔BSA converter; the 29 repealed labour Acts ↔ the four Labour Codes with key provisions and changes; limitation calculator (Limitation Act articles, NI Act s.138/142, Arbitration s.34, IBC s.61, CPA, GST, income-tax, industrial disputes, POSH, gratuity) with s.12 exclusion and weekend warnings. |
 | **Matters** | Organise research, drafts and documents by client matter; matter notes are passed to the AI as context. |
 | **Firm admin** | Invitations, roles (owner/admin/member), deactivation, usage by person and feature, audit log, full JSON data export. |
-| **Billing** | 14-day trial, Solo / Chambers / Firm plans with pooled "action" quotas, Razorpay subscriptions (UPI Autopay, cards, e-mandate), signed webhooks, automatic GST tax invoices (CGST+SGST or IGST, FY-wise numbering). |
+| **Billing** | 14-day trial, Starter (₹999, standard model) / Solo / Chambers / Firm plans with pooled "action" quotas, Razorpay subscriptions (UPI Autopay, cards, e-mandate), signed webhooks, automatic GST tax invoices (CGST+SGST or IGST, FY-wise numbering). |
 | **Marketing site** | Landing page with pricing and FAQ, demo-request form feeding a `leads` table, Terms and Privacy templates. |
 
 ## Quick start (local)
@@ -34,11 +34,33 @@ Without `ANTHROPIC_API_KEY` the app runs in **demo mode** with realistic sample 
 ANTHROPIC_API_KEY=sk-ant-... npm start
 ```
 
-Run the tests (27 unit and end-to-end API tests):
+Run the tests (33 unit, API and tooling tests):
 
 ```bash
 npm test
 ```
+
+## Choosing models: the comparison tool
+
+Before changing a model or launching a cheaper plan, measure quality. `eval/compare.js` runs the same research questions and drafts (`eval/questions.json` — 30 items across 12 practice areas; add your own) through several Claude models and writes, to `eval/results/<timestamp>/`:
+
+| File | For |
+|---|---|
+| `report.html` | Graders: answers side by side, labelled A/B/C, shuffled per question |
+| `grading-sheet.csv` | Graders: score 1–5, usable Y/N, wrong-or-invented-law Y/N, notes — no model names or costs |
+| `key.csv` | You only: which label is which model, cost, time, Citation Guard counts |
+| `summary.md` | Automatic metrics per model: cost per answer and per 100, time, unverified citations |
+
+```bash
+npm run compare -- --models claude-opus-5,claude-sonnet-5 --limit 5          # prints estimate, then stops
+npm run compare -- --models claude-opus-5,claude-sonnet-5,claude-haiku-4-5 --yes   # full run (~₹1,300)
+npm run compare -- --area labour --yes          # one practice area
+npm run compare -- --memo --limit 10 --yes      # research memos instead of quick answers
+# after advocates fill in grading-sheet.csv:
+npm run compare -- --score eval/results/<timestamp>
+```
+
+Live runs cost money, so the tool prints an estimate and does nothing until you add `--yes`. Without an API key it runs in demo mode (free) so you can try the workflow.
 
 ## Configuration
 
@@ -47,7 +69,8 @@ All settings are environment variables — see [`.env.example`](.env.example). T
 | Variable | Purpose |
 |---|---|
 | `ANTHROPIC_API_KEY` | Enables live AI. Blank = demo mode. |
-| `NYAYA_MODEL` | Claude model for all AI features (default `claude-opus-5`). |
+| `NYAYA_MODEL` | Premium model for trial, Solo, Chambers and Firm plans (default `claude-opus-5`). |
+| `NYAYA_MODEL_STANDARD` | Model for the ₹999 Starter plan (default `claude-sonnet-5`). |
 | `NYAYA_FALLBACKS` | Server-side refusal fallback (`default`) — if the model declines a request, Anthropic re-runs it on its recommended fallback model within the same call. `off` to disable. |
 | `PUBLIC_URL` | Used in invitation links. |
 | `UPLOAD_RETENTION_DAYS` | Uploaded client documents are deleted after this many days. |

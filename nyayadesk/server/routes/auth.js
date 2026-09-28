@@ -56,7 +56,7 @@ authRouter.get('/me', (req, res) => {
   const f = req.firm;
   res.json({
     user: req.user,
-    firm: { id: f.id, name: f.name, city: f.city, gstin: f.gstin, plan: f.plan, planName: PLANS[f.plan]?.name, seats: f.seats, status: f.status, trialEndsAt: f.trial_ends_at },
+    firm: { id: f.id, name: f.name, city: f.city, gstin: f.gstin, plan: f.plan, planName: PLANS[f.plan]?.name, features: (PLANS[f.plan] || PLANS.trial).features, seats: f.seats, status: f.status, trialEndsAt: f.trial_ends_at },
     usage: usageSummary(f),
     demoMode: config.demoMode,
   });

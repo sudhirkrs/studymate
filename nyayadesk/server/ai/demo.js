@@ -110,5 +110,5 @@ export async function demoStream(o, onEvent) {
     onEvent({ type: 'text', text: words.slice(i, i + 6).join('') });
     if (!fast) await new Promise((r) => setTimeout(r, 12));
   }
-  return { text, sources, usage: { input_tokens: 0, output_tokens: 0 }, stopReason: 'end_turn', demo: true };
+  return { text, sources, usage: { input_tokens: 0, output_tokens: 0 }, stopReason: 'end_turn', demo: true, model: o.model || 'demo' };
 }

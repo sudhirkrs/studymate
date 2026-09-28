@@ -139,6 +139,7 @@ CREATE TABLE IF NOT EXISTS usage_events (
   user_id TEXT NOT NULL,
   kind TEXT NOT NULL,
   actions INTEGER NOT NULL,
+  model TEXT,
   input_tokens INTEGER NOT NULL DEFAULT 0,
   output_tokens INTEGER NOT NULL DEFAULT 0,
   cache_read_tokens INTEGER NOT NULL DEFAULT 0,
@@ -197,7 +198,14 @@ export function openDb(file) {
   if (target !== ':memory:') fs.mkdirSync(path.dirname(target), { recursive: true });
   db = new DatabaseSync(target);
   db.exec(SCHEMA);
+  migrate(db);
   return db;
+}
+
+// Additive migrations for databases created by earlier versions.
+function migrate(d) {
+  const cols = d.prepare('PRAGMA table_info(usage_events)').all().map((c) => c.name);
+  if (!cols.includes('model')) d.exec('ALTER TABLE usage_events ADD COLUMN model TEXT');
 }
 
 export function getDb() {

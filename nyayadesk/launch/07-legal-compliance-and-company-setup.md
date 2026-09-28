@@ -21,7 +21,7 @@
 ## C. Payments
 
 - [ ] **Razorpay account** (KYC with company documents). Enable Subscriptions, UPI Autopay and e-mandates.
-- [ ] Create plans (monthly, per unit) with GST-inclusive amounts: Solo ₹3,538.82 · Chambers ₹7,078.82 · Firm ₹11,798.82. Put the plan IDs in `.env`.
+- [ ] Create plans (monthly, per unit) with GST-inclusive amounts: Starter ₹1,178.82 · Solo ₹3,538.82 · Chambers ₹7,078.82 · Firm ₹11,798.82. Put the plan IDs in `.env`.
 - [ ] Add webhook `https://<your-domain>/api/billing/webhook` for events: `subscription.activated`, `subscription.charged`, `subscription.pending`, `subscription.halted`, `subscription.cancelled`, `subscription.completed`. Put the secret in `RAZORPAY_WEBHOOK_SECRET`.
 - [ ] Run one live ₹1 test subscription end-to-end (plan activates, invoice appears).
 - [ ] RBI e-mandate rules: recurring debits above the applicable limit need additional factor authentication — Razorpay handles this; make sure customers expect the mandate approval step.

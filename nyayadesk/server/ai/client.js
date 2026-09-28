@@ -3,6 +3,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { config } from '../config.js';
 import { demoStream } from './demo.js';
+import { modelProfile } from '../data/models.js';
 
 // Web search is restricted to primary and reputable Indian legal sources.
 export const LEGAL_DOMAINS = [
@@ -58,6 +59,7 @@ function anthropic() {
  * @param {'low'|'medium'|'high'|'xhigh'|'max'} [o.effort]
  * @param {number} [o.maxTokens]
  * @param {(e: object) => void} [o.onEvent] receives {type:'text'|'status'|'source', ...}
+ * @param {string} [o.model] model ID (defaults to NYAYA_MODEL)
  * @param {'research'|'draft'|'redraft'|'review'} [o.kind] used by demo mode
  * @param {AbortSignal} [o.signal]
  */
@@ -65,8 +67,11 @@ export async function runStream(o) {
   const onEvent = o.onEvent || (() => {});
   if (config.demoMode) return demoStream(o, onEvent);
 
+  const model = o.model || config.model;
+  const profile = modelProfile(model);
+  const useFallback = config.fallbacks && profile.supportsFallback;
   const tools = o.webSearch
-    ? [{ type: 'web_search_20260209', name: 'web_search', max_uses: o.maxSearches || 6, allowed_domains: LEGAL_DOMAINS, user_location: { type: 'approximate', country: 'IN', timezone: 'Asia/Kolkata' } }]
+    ? [{ type: profile.webSearchType, name: 'web_search', max_uses: o.maxSearches || 6, allowed_domains: LEGAL_DOMAINS, user_location: { type: 'approximate', country: 'IN', timezone: 'Asia/Kolkata' } }]
     : undefined;
 
   const messages = [...o.messages];
@@ -79,16 +84,16 @@ export async function runStream(o) {
   // assistant turn appended to let it continue. Cap continuations.
   for (let round = 0; round < 5; round++) {
     const params = {
-      model: config.model,
-      max_tokens: o.maxTokens || 32000,
+      model,
+      max_tokens: Math.min(o.maxTokens || 32000, profile.maxOutput),
       system: [{ type: 'text', text: o.system, cache_control: { type: 'ephemeral' } }],
       messages,
-      thinking: { type: 'adaptive' },
-      output_config: { effort: o.effort || 'high' },
+      thinking: profile.thinking,
+      ...(profile.supportsEffort ? { output_config: { effort: o.effort || 'high' } } : {}),
       ...(tools ? { tools } : {}),
-      ...(config.fallbacks ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {}),
+      ...(useFallback ? { betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' } : {}),
     };
-    const stream = config.fallbacks
+    const stream = useFallback
       ? anthropic().beta.messages.stream(params, { signal: o.signal })
       : anthropic().messages.stream(params, { signal: o.signal });
 
@@ -146,5 +151,5 @@ export async function runStream(o) {
     onEvent({ type: 'text', text: note });
   }
 
-  return { text, sources: [...sources.values()], usage, stopReason };
+  return { text, sources: [...sources.values()], usage, stopReason, model };
 }

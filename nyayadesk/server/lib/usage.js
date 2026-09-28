@@ -41,11 +41,11 @@ export function checkAccess(firm, cost) {
   return null;
 }
 
-export function recordUsage(firmId, userId, kind, actions, usage = {}) {
+export function recordUsage(firmId, userId, kind, actions, usage = {}, model = null) {
   q.run(
-    `INSERT INTO usage_events (firm_id, user_id, kind, actions, input_tokens, output_tokens, cache_read_tokens, web_searches)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-    firmId, userId, kind, actions,
+    `INSERT INTO usage_events (firm_id, user_id, kind, actions, model, input_tokens, output_tokens, cache_read_tokens, web_searches)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    firmId, userId, kind, actions, model,
     usage.input_tokens || 0, usage.output_tokens || 0, usage.cache_read_input_tokens || 0,
     usage.server_tool_use?.web_search_requests || 0,
   );

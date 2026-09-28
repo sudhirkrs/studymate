@@ -3,7 +3,7 @@ import { q, id, audit } from '../db.js';
 import { runStream } from '../ai/client.js';
 import { RESEARCH_MEMO, RESEARCH_QUICK } from '../ai/prompts.js';
 import { verifyCitations } from '../ai/citations.js';
-import { ACTION_COST } from '../data/plans.js';
+import { ACTION_COST, UPGRADE_MESSAGE, modelFor, planAllows } from '../data/plans.js';
 import { checkAccess, recordUsage } from '../lib/usage.js';
 import { sse, str, wrap } from '../lib/http.js';
 
@@ -28,6 +28,7 @@ researchRouter.post('/', wrap(async (req, res) => {
   const question = str(req.body.question, 12000);
   const mode = req.body.mode === 'memo' ? 'memo' : 'quick';
   if (question.length < 8) return res.status(400).json({ error: 'Please describe your question in a little more detail.' });
+  if (mode === 'memo' && !planAllows(req.firm, 'research_memo')) return res.status(403).json({ error: UPGRADE_MESSAGE.research_memo });
   const cost = mode === 'memo' ? ACTION_COST.research_memo : ACTION_COST.research_quick;
   const blocked = checkAccess(req.firm, cost);
   if (blocked) return res.status(402).json({ error: blocked });
@@ -52,6 +53,7 @@ researchRouter.post('/', wrap(async (req, res) => {
   try {
     const result = await runStream({
       kind: 'research',
+      model: modelFor(req.firm),
       system: mode === 'memo' ? RESEARCH_MEMO : RESEARCH_QUICK,
       messages,
       webSearch: true,
@@ -66,7 +68,7 @@ researchRouter.post('/', wrap(async (req, res) => {
     q.run(`INSERT INTO research (id, firm_id, user_id, matter_id, mode, question, answer, sources_json, citations_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       rid, req.user.firmId, req.user.id, matter?.id || null, mode, question, result.text,
       JSON.stringify(result.sources.map(({ url, title }) => ({ url, title }))), JSON.stringify(citations));
-    recordUsage(req.user.firmId, req.user.id, `research_${mode}`, cost, result.usage);
+    recordUsage(req.user.firmId, req.user.id, `research_${mode}`, cost, result.usage, result.model);
     audit(req.user.firmId, req.user.id, 'research.run', rid, req.ip);
     stream.send({ type: 'citations', citations });
     stream.send({ type: 'done', id: rid, demo: Boolean(result.demo) });

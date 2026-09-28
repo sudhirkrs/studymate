@@ -38,7 +38,7 @@ billingRouter.get('/', (req, res) => {
     current: { plan: f.plan, seats: f.seats, status: f.status, trialEndsAt: f.trial_ends_at },
     usage: usageSummary(f),
     plans: Object.values(PLANS).filter((p) => p.id !== 'trial').map((p) => ({
-      id: p.id, name: p.name, pricePerSeat: p.pricePerSeatPaise / 100, minSeats: p.minSeats, maxSeats: p.maxSeats, actionsPerSeat: p.actionsPerSeat, features: p.features,
+      id: p.id, name: p.name, pricePerSeat: p.pricePerSeatPaise / 100, minSeats: p.minSeats, maxSeats: p.maxSeats, actionsPerSeat: p.actionsPerSeat, features: p.features, modelTier: p.modelTier,
     })),
     invoices: q.all('SELECT id, number, plan, seats, total_paise, created_at FROM invoices WHERE firm_id = ? ORDER BY created_at DESC', f.id),
   });

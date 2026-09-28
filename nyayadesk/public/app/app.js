@@ -280,7 +280,12 @@ async function viewResearch(id) {
   </div>`;
   let mode = 'quick';
   let followUpOf = null;
-  $$('.seg button').forEach((b) => (b.onclick = () => { mode = b.dataset.m; $$('.seg button').forEach((x) => x.classList.toggle('on', x === b)); }));
+  const canMemo = state.me.firm.features.includes('research_memo');
+  $$('.seg button').forEach((b) => (b.onclick = () => {
+    if (b.dataset.m === 'memo' && !canMemo) return toast('Research memos are on the Solo plan and above — upgrade in Settings → Billing.', 5000);
+    mode = b.dataset.m; $$('.seg button').forEach((x) => x.classList.toggle('on', x === b));
+  }));
+  if (!canMemo) $('.seg button[data-m="memo"]').title = 'Available on Solo and above';
   $$('#chips .chip').forEach((c, i) => (c.onclick = () => { $('#q').value = SAMPLE_QUESTIONS[i]; $('#q').focus(); }));
   $('#q').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) $('#go').click(); });
   $('#go').onclick = async () => {
@@ -538,6 +543,13 @@ const REVIEW_MODES = [
 
 async function viewReview() {
   shell('review');
+  if (!state.me.firm.features.includes('review')) {
+    view().innerHTML = `<div class="page">${banners()}<h1>Document review</h1><p class="sub">Contract risk tables, Labour Codes compliance audits, judgment headnotes, lists of dates and pleading critiques.</p>
+      <div class="card stack" style="max-width:560px"><strong>Document review is included in the Solo plan and above.</strong>
+      <p class="muted small" style="margin:0">Your ${esc(state.me.firm.planName)} plan covers quick research, drafting and the legal tools. Upgrade to review contracts, judgments and pleadings, and to run full research memos.</p>
+      <div><a class="btn primary" href="#/settings/billing">See plans</a></div></div></div>`;
+    return;
+  }
   const docs = await api('/documents');
   view().innerHTML = `
   <div class="page wide">
@@ -814,10 +826,11 @@ async function tabBilling(el, me) {
   const isAdmin = ['owner', 'admin'].includes(me.user.role);
   el.innerHTML = `
     <div class="card" style="margin-bottom:16px"><div class="row"><div><div class="small muted">Current plan</div><div class="stat">${esc(me.firm.planName)} <span class="small muted">· ${b.current.seats} seat(s) · ${esc(b.current.status)}</span></div></div></div></div>
-    <div class="grid3">${b.plans.map((p) => `<div class="card plan ${p.id === b.current.plan ? 'current' : ''}">
+    <div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(210px,1fr))">${b.plans.map((p) => `<div class="card plan ${p.id === b.current.plan ? 'current' : ''}">
       <strong>${esc(p.name)}</strong><div class="price">${inr(p.pricePerSeat)}<span class="small muted"> /seat/month + GST</span></div>
-      <div class="small muted">${p.minSeats === p.maxSeats ? '1 advocate' : `${p.minSeats}–${p.maxSeats} seats`} · ${p.actionsPerSeat} actions per seat, pooled</div>
-      ${isAdmin ? `<div class="row"><input class="input seats" data-plan="${esc(p.id)}" type="number" min="${p.minSeats}" max="${p.maxSeats}" value="${Math.max(p.minSeats, Math.min(p.maxSeats, b.current.seats))}" style="width:80px" ${p.minSeats === p.maxSeats ? 'hidden' : ''}><button class="btn ${p.id === 'chambers' ? 'primary' : ''} sub" data-plan="${esc(p.id)}">${p.id === b.current.plan && b.current.status === 'active' ? 'Change seats' : 'Subscribe'}</button></div>` : ''}
+      <div class="small muted">${p.minSeats === p.maxSeats ? '1 advocate' : `${p.minSeats}–${p.maxSeats} seats`} · ${p.actionsPerSeat} actions${p.minSeats === p.maxSeats ? '' : ' per seat, pooled'}</div>
+      <div class="small">${p.modelTier === 'standard' ? 'Quick research, drafting and legal tools on our standard AI model' : 'Premium AI model · research memos · document review'}</div>
+      ${isAdmin ? `<div class="row"><input class="input seats" data-plan="${esc(p.id)}" type="number" min="${p.minSeats}" max="${p.maxSeats}" value="${Math.max(p.minSeats, Math.min(p.maxSeats, b.current.seats))}" style="width:80px" ${p.minSeats === p.maxSeats ? 'hidden' : ''}>${p.id === b.current.plan && b.current.status === 'active' && p.minSeats === p.maxSeats ? '<button class="btn" disabled>Current plan</button>' : `<button class="btn ${p.id === 'chambers' ? 'primary' : ''} sub" data-plan="${esc(p.id)}">${p.id === b.current.plan && b.current.status === 'active' ? 'Change seats' : 'Subscribe'}</button>`}</div>` : ''}
     </div>`).join('')}</div>
     <p class="small muted">Pay by UPI Autopay, card or e-mandate via Razorpay. GST invoices are issued automatically; add your GSTIN under Firm to claim input tax credit. Annual billing (2 months free) and Enterprise plans: <a href="mailto:sales@nyayadesk.in">sales@nyayadesk.in</a>.</p>
     ${isAdmin && b.current.status === 'active' ? '<button class="btn small" id="cancel">Cancel subscription</button>' : ''}
