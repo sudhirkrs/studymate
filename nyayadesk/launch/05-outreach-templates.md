@@ -38,6 +38,18 @@ Personalise the first line of every message. Never bulk-blast advocates — the 
 **LinkedIn connection note (≤ 300 characters)**
 > Hi [Name] — I build legal AI for Indian chambers (research with verified citations + BNSS-ready drafting). Your posts on [topic] were sharp. Would love to connect.
 
+## B2. Labour & employment wedge — to HR heads, in-house counsel and labour practices
+
+> Subject: Re-papering for the Labour Codes
+>
+> Dear [Name],
+>
+> Since the four Labour Codes took effect, most employers we speak to are re-checking the same things: wage structures against the 50% "wages" rule, appointment letters, fixed-term contracts, standing orders, and contractor arrangements.
+>
+> NyayaDesk audits an appointment letter or HR policy against the Codes in about two minutes (clause-by-clause table with Code sections and fixes), and drafts charge-sheets, enquiry reports, retrenchment letters, gratuity claims and POSH documents in proper form.
+>
+> Would a 20-minute look, on one of your own documents, be useful?
+
 ## C. After a bar association session
 
 > Thank you for attending "Using AI safely in practice" at [Bar Association]. As promised:

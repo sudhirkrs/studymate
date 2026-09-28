@@ -8,10 +8,10 @@
 |---|---|
 | **Research** | Plain-English questions answered by Claude with web search restricted to Indian primary and reputable legal sources (sci.gov.in, High Court sites, India Code, the Gazette, regulators, Indian Kanoon). Quick answer or full research memo; follow-up questions; matter context. |
 | **Citation Guard** | Extracts every case name and citation (SCC, SCC OnLine, AIR, INSC, SCR, Cri LJ, neutral citations) from each answer and grades it **Verified** (found in retrieved sources), **Landmark** (settled citation in a built-in index) or **Check** (not verified — flagged red). |
-| **Drafting** | 25 Indian templates across notices, criminal (BNSS bail, anticipatory bail, s.528 quashing, discharge, s.138 complaint), civil (plaint, written statement, O.XXXIX injunction, caveat), constitutional (Art. 226 writ, SLP, RTI), commercial (NDA, MSA, employment, board resolution, s.21 arbitration notice), family and property. Placeholders instead of invented facts; drafting notes; in-browser editing; "revise with AI" on a selection; versioning; Word export in A4 / Times New Roman 14 / 1.5 spacing. |
+| **Drafting** | 37 Indian templates across notices, criminal (BNSS bail, anticipatory bail, s.528 quashing, discharge, s.138 complaint), civil (plaint, written statement, O.XXXIX injunction, caveat), constitutional (Art. 226 writ, SLP, RTI), commercial (NDA, MSA, board resolution, s.21 arbitration notice), labour & employment (appointment letter, charge-sheet and reply, domestic enquiry report, termination/retrenchment, Labour Court claim, gratuity claim, POSH complaint and IC inquiry report, full-and-final settlement, contract-labour agreement, EPFO/ESIC reply), family and property. Placeholders instead of invented facts; drafting notes; in-browser editing; "revise with AI" on a selection; versioning; Word export in A4 / Times New Roman 14 / 1.5 spacing. |
 | **Firm templates** | Firms add their own precedents so drafts follow house style. |
-| **Document review** | Upload PDF (including scanned), DOCX or TXT: contract risk table, judgment headnote with paragraph references, list of dates, pleading critique, or a custom question. Uploads auto-delete after the retention period. |
-| **Legal tools** (free) | IPC↔BNS, CrPC↔BNSS, Evidence Act↔BSA converter; limitation calculator (Limitation Act articles, NI Act s.138/142, Arbitration s.34, IBC s.61, CPA, GST, income-tax) with s.12 exclusion and weekend warnings. |
+| **Document review** | Upload PDF (including scanned), DOCX or TXT: contract risk table, Labour Codes compliance audit, judgment headnote with paragraph references, list of dates, pleading critique, or a custom question. Uploads auto-delete after the retention period. |
+| **Legal tools** (free) | IPC↔BNS, CrPC↔BNSS, Evidence Act↔BSA converter; the 29 repealed labour Acts ↔ the four Labour Codes with key provisions and changes; limitation calculator (Limitation Act articles, NI Act s.138/142, Arbitration s.34, IBC s.61, CPA, GST, income-tax, industrial disputes, POSH, gratuity) with s.12 exclusion and weekend warnings. |
 | **Matters** | Organise research, drafts and documents by client matter; matter notes are passed to the AI as context. |
 | **Firm admin** | Invitations, roles (owner/admin/member), deactivation, usage by person and feature, audit log, full JSON data export. |
 | **Billing** | 14-day trial, Solo / Chambers / Firm plans with pooled "action" quotas, Razorpay subscriptions (UPI Autopay, cards, e-mandate), signed webhooks, automatic GST tax invoices (CGST+SGST or IGST, FY-wise numbering). |
@@ -34,7 +34,7 @@ Without `ANTHROPIC_API_KEY` the app runs in **demo mode** with realistic sample 
 ANTHROPIC_API_KEY=sk-ant-... npm start
 ```
 
-Run the tests (24 unit and end-to-end API tests):
+Run the tests (27 unit and end-to-end API tests):
 
 ```bash
 npm test
@@ -110,7 +110,7 @@ deploy/               Caddyfile, backup script
 
 ## Before you launch — verify
 
-- The criminal-law mapping (`server/data/criminal-law-map.js`) and limitation table (`server/data/limitation.js`) cover the most-used provisions and were prepared carefully, but **have a practising advocate verify them against the bare acts** before launch.
+- The criminal-law mapping (`server/data/criminal-law-map.js`), the labour-law mapping (`server/data/labour.js`) and limitation table (`server/data/limitation.js`) cover the most-used provisions and were prepared carefully, but **have a practising advocate verify them against the bare acts** before launch.
 - Fill all `[PLACEHOLDERS]` in `public/terms.html` and `public/privacy.html` and have them reviewed by counsel.
 - Run a trademark search on the name.
 

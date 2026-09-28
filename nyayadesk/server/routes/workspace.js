@@ -6,6 +6,7 @@ import { requireAdmin, sha256 } from '../auth.js';
 import { str } from '../lib/http.js';
 import { CODES, convertSection } from '../data/criminal-law-map.js';
 import { LIMITATION, computeLimitation } from '../data/limitation.js';
+import { LABOUR_HIGHLIGHTS } from '../data/labour.js';
 import { PLANS } from '../data/plans.js';
 import { usageSummary } from '../lib/usage.js';
 import { config } from '../config.js';
@@ -55,7 +56,10 @@ mattersRouter.delete('/:id', (req, res) => {
 export const toolsRouter = Router();
 
 toolsRouter.get('/codes', (_req, res) => {
-  res.json(Object.fromEntries(Object.entries(CODES).map(([k, v]) => [k, { from: v.from, to: v.to, rows: v.rows }])));
+  res.json({
+    ...Object.fromEntries(Object.entries(CODES).map(([k, v]) => [k, { from: v.from, to: v.to, rows: v.rows }])),
+    labourHighlights: LABOUR_HIGHLIGHTS,
+  });
 });
 
 toolsRouter.get('/convert', (req, res) => {

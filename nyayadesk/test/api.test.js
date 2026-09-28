@@ -153,7 +153,10 @@ test('quota and trial expiry block AI calls', async () => {
 test('drafting: templates, generate, edit, docx export', async () => {
   const c = await signup('draft@firm.in');
   const t = await c.get('/api/drafts/templates');
-  assert.ok(t.body.templates.length >= 25);
+  assert.ok(t.body.templates.length >= 35);
+  assert.ok(t.body.categories.includes('Labour & Employment'));
+  const lab = sseEvents(await (await c.post('/api/drafts/generate', { templateId: 'termination', inputs: { employer: 'Acme Pvt Ltd, 320 workers', ground: 'retrenchment' } }, true)).text());
+  assert.ok(lab.some((e) => e.type === 'done'));
   assert.equal((await c.post('/api/drafts/generate', { templateId: 'nope' })).status, 400);
   const events = sseEvents(await (await c.post('/api/drafts/generate', { templateId: 'bail-regular', inputs: { applicant: 'Ramesh Kumar', court: 'Sessions Court, Pune' } }, true)).text());
   const done = events.find((e) => e.type === 'done');
@@ -184,7 +187,11 @@ test('documents: upload, reject bad types, review, delete', async () => {
   assert.equal((await c.post('/api/documents', fakePdf)).status, 415);
   const ev = sseEvents(await (await c.post(`/api/documents/${up.body.id}/review`, { mode: 'contract' }, true)).text());
   assert.ok(ev.some((e) => e.type === 'done'));
-  assert.equal((await c.get(`/api/documents/${up.body.id}/reviews`)).body.length, 1);
+  const lab = sseEvents(await (await c.post(`/api/documents/${up.body.id}/review`, { mode: 'labour' }, true)).text());
+  assert.ok(lab.some((e) => e.type === 'done'));
+  const reviews = (await c.get(`/api/documents/${up.body.id}/reviews`)).body;
+  assert.equal(reviews.length, 2);
+  assert.ok(reviews.some((r) => r.mode === 'labour'));
   assert.equal((await c.del(`/api/documents/${up.body.id}`)).status, 200);
 });
 
@@ -195,6 +202,11 @@ test('legal tools endpoints', async () => {
   const lim = await c.post('/api/tools/limitation', { id: 'cpa69', startDate: '2026-01-10' });
   assert.equal(lim.body.lastDate, '2028-01-10');
   assert.equal((await c.post('/api/tools/limitation', { id: 'cpa69', startDate: 'x' })).status, 400);
+  const labour = await c.get('/api/tools/convert?code=labour&q=25O');
+  assert.equal(labour.body[0].new, '80');
+  const codes = await c.get('/api/tools/codes');
+  assert.ok(codes.body.labour.rows.length > 29);
+  assert.ok(codes.body.labourHighlights.length >= 5);
 });
 
 test('team invites respect roles and seats', async () => {

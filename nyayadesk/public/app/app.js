@@ -253,6 +253,7 @@ const SAMPLE_QUESTIONS = [
   'Is a non-compete clause in an employment agreement enforceable after termination in India?',
   'When can a High Court quash an FIR under s.528 BNSS on the basis of a settlement in a non-compoundable offence?',
   'Can an arbitral award be set aside for patent illegality in an international commercial arbitration seated in India?',
+  'After the Labour Codes, does a software company need government permission to retrench 150 engineers, and what compensation is payable?',
   'What must a landlord prove to evict a tenant for bona fide personal need under the Delhi Rent Control Act?',
 ];
 
@@ -530,6 +531,7 @@ const REVIEW_MODES = [
   ['contract', 'Contract review', 'Risk table, missing protections, Indian law compliance, negotiation priorities'],
   ['judgment', 'Judgment summary', 'Headnote: facts, issues, held, ratio, with paragraph references'],
   ['chronology', 'List of dates', 'Chronology table for petitions and written submissions'],
+  ['labour', 'Labour law compliance', 'Appointment letters, HR policies, standing orders, contractor agreements — checked against the Labour Codes'],
   ['pleading', 'Pleading critique', 'Maintainability, limitation, weaknesses and suggested amendments'],
   ['custom', 'Ask a question', 'Any specific question about the document'],
 ];
@@ -613,10 +615,10 @@ async function viewTools() {
     <h1>Legal tools</h1>
     <p class="sub">Instant, deterministic references — no AI actions used.</p>
     <div class="card stack">
-      <h2 style="margin:0;font-size:20px">New criminal laws converter</h2>
-      <p class="small muted" style="margin:0">IPC → BNS, CrPC → BNSS, Evidence Act → BSA (and back). In force from 1 July 2024.</p>
+      <h2 style="margin:0;font-size:20px">New laws converter</h2>
+      <p class="small muted" style="margin:0">IPC → BNS, CrPC → BNSS, Evidence Act → BSA (in force from 1 July 2024), and the 29 labour Acts → the four Labour Codes. Search a section number, an Act name (e.g. "gratuity", "Factories") or a keyword.</p>
       <div class="row">
-        <select class="input" id="code" style="width:auto"><option value="ipc">IPC ↔ BNS</option><option value="crpc">CrPC ↔ BNSS</option><option value="iea">Evidence Act ↔ BSA</option></select>
+        <select class="input" id="code" style="width:auto"><option value="ipc">IPC ↔ BNS</option><option value="crpc">CrPC ↔ BNSS</option><option value="iea">Evidence Act ↔ BSA</option><option value="labour">Labour Acts ↔ Labour Codes</option></select>
         <div class="seg"><button class="on" data-d="old-to-new">Old → New</button><button data-d="new-to-old">New → Old</button></div>
         <input class="input" id="sec" placeholder="Section no. or keyword, e.g. 420 or bail" style="flex:1;min-width:180px">
       </div>
@@ -632,13 +634,22 @@ async function viewTools() {
     </div>
   </div>`;
   let dir = 'old-to-new';
+  const { labourHighlights: hl } = await api('/tools/codes');
+  const labourHighlights = `<div class="card small" style="background:var(--surface-2);margin-top:8px"><strong>Key changes under the Labour Codes</strong><ul>${hl.map((h) => `<li>${esc(h)}</li>`).join('')}</ul></div>`;
   const conv = async () => {
     const q = $('#sec').value.trim();
-    if (!q) { $('#conv').innerHTML = ''; return; }
+    if (!q) { $('#conv').innerHTML = $('#code').value === 'labour' ? labourHighlights : ''; return; }
     const rows = await api(`/tools/convert?code=${$('#code').value}&q=${encodeURIComponent(q)}&dir=${dir}`);
-    const names = { ipc: ['IPC', 'BNS'], crpc: ['CrPC', 'BNSS'], iea: ['IEA', 'BSA'] }[$('#code').value];
-    $('#conv').innerHTML = rows.length ? `<table class="list"><thead><tr><th>${names[0]}</th><th>${names[1]}</th><th>Subject</th></tr></thead><tbody>${rows.map((r) => `<tr><td><strong>${esc(r.old)}</strong></td><td><strong>${esc(r.new)}</strong></td><td>${esc(r.title)}${r.changed ? ' <span class="badge unverified">Changed</span>' : ''}</td></tr>`).join('')}</tbody></table><p class="small muted">Confirm against the bare act before filing. "Changed" marks provisions altered in substance.</p>`
-      : '<p class="muted small">No match in the quick-reference table. Try a keyword, or check the MHA comparative table.</p>';
+    const names = { ipc: ['IPC', 'BNS'], crpc: ['CrPC', 'BNSS'], iea: ['IEA', 'BSA'], labour: ['Old Act', 'Labour Code'] }[$('#code').value];
+    const cell = (act, sec) => {
+      if (!act) return `<strong>${esc(sec)}</strong>`;
+      if (sec === 'new') return '<em class="small">New provision</em>';
+      if (act === '—') return '<span class="muted">—</span>';
+      return `${sec !== '—' ? `<strong>s.${esc(sec)}</strong><br>` : ''}<span class="small">${esc(act)}</span>`;
+    };
+    $('#conv').innerHTML = rows.length ? `<table class="list"><thead><tr><th>${names[0]}</th><th>${names[1]}</th><th>Subject</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${cell(r.oldAct, r.old)}</td><td>${cell(r.newAct, r.new)}</td><td>${esc(r.title)}${r.changed ? ' <span class="badge unverified">Changed</span>' : ''}</td></tr>`).join('')}</tbody></table><p class="small muted">Confirm against the bare act${$('#code').value === 'labour' ? ', the Code and the applicable central and State rules' : ''} before filing. "Changed" marks provisions altered in substance.</p>`
+      : '<p class="muted small">No match in the quick-reference table. Try a keyword or Act name.</p>';
+    if ($('#code').value === 'labour' && !rows.length) $('#conv').innerHTML += labourHighlights;
   };
   $('#sec').oninput = conv;
   $('#code').onchange = conv;

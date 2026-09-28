@@ -44,6 +44,32 @@ test('IPC → BNS and back', () => {
   assert.equal(convertSection('ipc', '377')[0].changed, true);
 });
 
+test('labour Acts → Labour Codes', () => {
+  assert.equal(convertSection('labour', '25F')[0].new, '70');
+  assert.equal(convertSection('labour', '25F')[0].newAct, 'Industrial Relations Code, 2020');
+  assert.equal(convertSection('labour', '25N')[0].changed, true, 'threshold change is flagged');
+  assert.equal(convertSection('labour', '70', 'new-to-old')[0].old, '25F');
+  const gratuity = convertSection('labour', 'gratuity');
+  assert.ok(gratuity.some((r) => r.newAct === 'Code on Social Security, 2020' && r.new === '53'));
+  const factories = convertSection('labour', 'Factories Act');
+  assert.ok(factories.some((r) => r.newAct === 'OSH Code, 2020'));
+});
+
+test('all 29 repealed labour Acts are mapped to exactly the four Codes', async () => {
+  const { LABOUR_ROWS } = await import('../server/data/labour.js');
+  const acts = LABOUR_ROWS.filter((r) => r.old === '—');
+  assert.equal(acts.length, 29);
+  assert.equal(new Set(acts.map((r) => r.oldAct)).size, 29);
+  const perCode = acts.reduce((m, r) => ((m[r.newAct] = (m[r.newAct] || 0) + 1), m), {});
+  assert.deepEqual(perCode, { 'Code on Wages, 2019': 4, 'Industrial Relations Code, 2020': 3, 'Code on Social Security, 2020': 9, 'OSH Code, 2020': 13 });
+});
+
+test('limitation: labour entries', () => {
+  assert.equal(computeLimitation('id2a', '2024-05-10').lastDate, '2027-05-10');
+  assert.equal(computeLimitation('posh9', '2026-01-15').lastDate, '2026-04-15');
+  assert.equal(computeLimitation('posh-inquiry', '2026-01-01').lastDate, '2026-04-01');
+});
+
 test('limitation: day periods exclude the first day (s.12)', () => {
   const r = computeLimitation('ni138notice', '2026-03-01');
   assert.equal(r.lastDate, '2026-03-31');
@@ -82,5 +108,9 @@ test('templates are well-formed and unique', () => {
     assert.ok(t.name && t.category && t.instructions.length > 80, t.id);
     assert.ok(t.fields.length > 0 && t.fields.every((f) => f.key && f.label), t.id);
   }
-  assert.ok(TEMPLATES.length >= 25);
+  assert.ok(TEMPLATES.length >= 35);
+  const labour = TEMPLATES.filter((t) => t.category === 'Labour & Employment').map((t) => t.id);
+  for (const id of ['employment', 'chargesheet', 'chargesheet-reply', 'enquiry-report', 'termination', 'id-claim', 'gratuity-claim', 'posh-complaint', 'posh-inquiry-report', 'fnf-settlement', 'manpower-contract', 'epf-esi-reply']) {
+    assert.ok(labour.includes(id), `missing labour template ${id}`);
+  }
 });

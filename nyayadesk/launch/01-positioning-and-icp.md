@@ -20,6 +20,7 @@
 | No fake citations | Citation Guard panel: Verified / Landmark / Check with links |
 | First drafts in Indian formats | Bail application under s.483 BNSS drafted from five facts, exported to Word |
 | New criminal laws handled | IPC 420 → BNS 318(4) instantly; drafts cite BNS with IPC in brackets |
+| Labour Codes handled | Retrenchment question answered under the Industrial Relations Code; appointment letter audited for the 50% wages rule |
 | Contract and judgment review | Upload a client's MSA → risk table with clause numbers |
 | Firm control | Matters, shared history, audit log, house-style precedents |
 
@@ -27,7 +28,8 @@
 
 1. **Litigation chambers and boutique firms, 3–25 advocates**, in Delhi NCR, Mumbai, Bengaluru, Hyderabad, Chennai, Pune, Kolkata, Chandigarh, Ahmedabad and Lucknow. Practice: criminal, commercial litigation, arbitration, cheque bounce, consumer, service, property. Buying decision: the senior/managing partner, in one or two meetings. **Best first market.**
 2. **Mid-size full-service firms, 25–150 lawyers.** Longer cycle (knowledge-management partner, IT, sometimes a security questionnaire). Higher contract value. Start pilots with one practice group.
-3. **In-house legal teams** at companies with 3–20 lawyers (NBFCs, real estate, manufacturing, startups): high contract and notice volume, budget exists. Sold on contract review, notices and research.
+3. **In-house legal teams** at companies with 3–20 lawyers (NBFCs, real estate, manufacturing, startups): high contract and notice volume, budget exists. Sold on contract review, notices, research — and Labour Codes compliance, which every HR and legal head is re-papering for.
+   - **Labour & employment boutiques and HR-compliance practices** are a strong wedge: the Labour Codes forced every employer to revisit wage structures, appointment letters, standing orders and contractor arrangements, and these firms are overloaded with exactly the drafting NyayaDesk automates.
 4. **Solo advocates** — high volume, low price, self-serve through the website trial. Do not spend sales time here; let the product sell.
 
 Disqualify early: firms that want the AI to give advice directly to their clients; firms unwilling to have any data leave their own servers (route to Enterprise/self-hosted only if the deal size justifies it).
