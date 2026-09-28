@@ -63,3 +63,9 @@ The syllabus structure and mark weightings follow the CISCE ISC syllabus for 202
 ## Licence
 
 MIT for the code. The study content is original explanatory writing prepared for this repository.
+
+---
+
+## Also in this repository: NyayaDesk
+
+[`nyayadesk/`](nyayadesk/README.md) is a separate, self-contained product — an AI legal research and drafting workspace for Indian law firms, with its launch plan in [`nyayadesk/launch/`](nyayadesk/launch/README.md). It does not affect the study site above.

@@ -1,0 +1,22 @@
+name: NyayaDesk CI
+on:
+  push:
+    paths: ['nyayadesk/**', '.github/workflows/nyayadesk-ci.yml']
+  pull_request:
+    paths: ['nyayadesk/**', '.github/workflows/nyayadesk-ci.yml']
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: nyayadesk
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: nyayadesk/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: docker build -t nyayadesk:ci .

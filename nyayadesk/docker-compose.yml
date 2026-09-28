@@ -1,0 +1,29 @@
+# Single-server production deployment: app + Caddy (automatic HTTPS).
+# 1. Point your domain's DNS A record at the server.
+# 2. cp .env.example .env and fill it in.
+# 3. DOMAIN=app.yourdomain.in docker compose up -d
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - nyaya-data:/data
+    expose:
+      - "8080"
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    depends_on:
+      - app
+volumes:
+  nyaya-data:
+  caddy-data:
